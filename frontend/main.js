@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    const BACKEND_URL = 'http://localhost:5000';
+    const BACKEND_URL = 'https://lifespace-api.onrender.com/'; // <-- Your new Render URL
 
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
