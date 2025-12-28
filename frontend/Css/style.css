@@ -865,6 +865,16 @@ body.focus-mode .player-island {
 }
 .profile-action-btn:hover { background: rgba(255,255,255,0.2); }
 
+/* What's New Button */
+#close-whats-new-btn {
+    background: linear-gradient(135deg, var(--purple-glow), var(--teal-glow));
+    color: var(--text-main);
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
 /* --- STATS VIEW --- */
 .stats-container {
     display: grid;

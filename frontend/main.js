@@ -550,7 +550,11 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         switchView('developer');
     };
-    if(profileBtn) profileBtn.onclick = () => switchView('profile');
+    
+    const profileBtn = document.getElementById('profile-btn');
+    if(profileBtn) {
+        profileBtn.onclick = () => switchView('profile');
+    }
 
     const moreNavBtn = document.getElementById('more-nav-btn');
     const moreNavList = document.getElementById('more-nav-list');
@@ -587,6 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- NOTIFICATION UI ---
     const notificationBtn = document.getElementById('notification-btn');
     const notificationMenu = document.getElementById('notification-menu');
+    
     if (notificationBtn && notificationMenu) {
         notificationBtn.onclick = (e) => {
             e.stopPropagation();
