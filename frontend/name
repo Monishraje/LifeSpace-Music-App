@@ -1,0 +1,50 @@
+const createPlaylistModal = document.getElementById('create-playlist-modal');
+
+const createPlaylistBtn = document.getElementById('create-playlist-btn');
+    if(createPlaylistBtn) {
+        createPlaylistBtn.onclick = () => createPlaylistModal.style.display = 'block';
+    }
+
+    
+            createPlaylistModal.style.display = 'none';
+
+            if (event.target == loginModal || event.target == signupModal || event.target == uploadSongModal || event.target == createPlaylistModal)
+
+                createPlaylistModal.style.display = 'none';
+
+                const createPlaylistForm = document.getElementById('create-playlist-form');
+    if(createPlaylistForm) {
+        createPlaylistForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                alert('You must be logged in to create a playlist.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/playlists`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token,
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    alert('Playlist created successfully!');
+                    createPlaylistModal.style.display = 'none';
+                    fetchAndDisplayPlaylists(); // Refresh playlists
+                } else {
+                    alert('Playlist creation failed!');
+                }
+            } catch (error) {
+                console.error('Create playlist error:', error);
+                alert('An error occurred during playlist creation.');
+            }
+        });
+    }

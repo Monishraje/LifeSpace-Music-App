@@ -1,0 +1,62 @@
+--- /dev/null
++++ c:\Users\hp\Desktop\LifeSpace\COMMANDS.md
+@@ -0,0 +1,58 @@
++# LifeSpace Admin Command Book
++
++This guide provides instructions on how to manage user roles using the API.
++
++## Prerequisites
++
++1.  **Owner Account**: You must be logged in as the Owner (`ManuRaje77994`) to perform these actions.
++2.  **Auth Token**: You need the JWT token of the Owner account.
++    *   Log in to the web app as the Owner.
++    *   Open Developer Tools (F12) -> Application -> Local Storage.
++    *   Copy the value of the `token` key.
++
++## Base URL
++
++`http://localhost:5000`
++
++---
++
++## 1. Give Role / Change Role
++
++To assign a role (`admin`, `developer`, `user`) to a specific user.
++
++**Endpoint:** `POST /api/auth/role`
++
++**Headers:**
++*   `Content-Type`: `application/json`
++*   `x-auth-token`: `<YOUR_OWNER_TOKEN>`
++
++**Body:**
++```json
++{
++  "username": "TargetUsername",
++  "newRole": "admin"
++}
++```
++
++### Curl Command Example
++
++Replace `<YOUR_OWNER_TOKEN>` with your actual token and `TargetUsername` with the user you want to update.
++
++```bash
++curl -X POST http://localhost:5000/api/auth/role \
++  -H "Content-Type: application/json" \
++  -H "x-auth-token: <YOUR_OWNER_TOKEN>" \
++  -d "{\"username\": \"TargetUsername\", \"newRole\": \"admin\"}"
++```
++
++---
++
++## 2. Remove Role (Demote to User)
++
++To remove a special role, simply assign the role `user` back to them.
++
++```bash
++curl -X POST http://localhost:5000/api/auth/role \
++  -H "Content-Type: application/json" \
++  -H "x-auth-token: <YOUR_OWNER_TOKEN>" \
++  -d "{\"username\": \"TargetUsername\", \"newRole\": \"user\"}"
++```

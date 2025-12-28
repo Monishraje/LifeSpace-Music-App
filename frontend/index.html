@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Space | Cosmic Fidelity</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="Css/style.css">
+    <link rel="icon" type="image/png" href="Assets/favicon.png">
+    <style>
+        /* New Way: Playlist Delete Button Styles */
+        .playlist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .delete-playlist-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+        }
+        .rename-playlist-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        .share-playlist-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--teal-glow);
+            cursor: pointer;
+        }
+        .playlist-item:hover .delete-playlist-btn,
+        .playlist-item:hover .rename-playlist-btn,
+        .playlist-item:hover .share-playlist-btn {
+            display: block;
+        }
+        /* Progress Bar Styles */
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none; /* Hidden by default */
+        }
+        .progress-bar {
+            width: 0%;
+            height: 8px;
+            background-color: #764ba2; /* Matches theme */
+            border-radius: 4px;
+            transition: width 0.2s;
+        }
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1); border-left-color: var(--purple-glow);
+            border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Download Button Style */
+        .download-song-btn {
+            position: absolute; top: 10px; right: 45px; /* Positioned to the left of delete btn */
+            background: rgba(0,0,0,0.6); color: var(--teal-glow);
+            border: none; border-radius: 50%; width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; opacity: 0; transition: 0.2s; z-index: 5;
+        }
+        .music-card:hover .download-song-btn { opacity: 1; }
+        .download-song-btn:hover { background: #fff; transform: scale(1.1); }
+    </style>
+</head>
+<body>
+
+    <div id="welcome-page" class="welcome-page">
+        <div class="welcome-content">
+            <h1>Life Space</h1>
+            <p>Your cosmic music streaming experience</p>
+            <div class="welcome-buttons">
+                <button id="welcome-login-btn">Log In</button>
+                <button id="welcome-signup-btn">Sign Up</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard" class="app-grid" style="display: none;">
+        
+        <aside class="sidebar">
+            <div class="brand">
+                <h1>Life Space</h1>
+            </div>
+
+            <ul class="nav-list">
+                <li class="nav-item active" id="nav-home">
+                    <i class="ph-fill ph-house"></i> Home
+                </li>
+                <li class="nav-item" id="nav-search">
+                    <i class="ph ph-magnifying-glass"></i> Search
+                </li>
+                <li class="nav-item" id="nav-library">
+                    <i class="ph ph-books"></i> Library
+                    <div id="library-now-playing-indicator" style="display: none; margin-left: auto;">
+                        <i class="ph-fill ph-speaker-high" style="color: var(--purple-glow); animation: pulse 1s infinite;"></i>
+                    </div>
+                </li>
+                <li class="nav-item" id="more-nav-btn">
+                    <i class="ph-fill ph-caret-down"></i> More
+                </li>
+            </ul>
+
+            <ul id="more-nav-list" class="nav-list" style="display: none; border-top: 1px solid var(--glass-border); margin-top: 10px; padding-top: 10px;">
+                 <li class="nav-item" id="nav-feed">
+                    <i class="ph ph-rss"></i> Feed
+                </li>
+                <li class="nav-item" id="nav-history"><i class="ph ph-clock-counter-clockwise"></i> History</li>
+                <li class="nav-item" id="nav-stats"><i class="ph ph-chart-bar"></i> Stats</li>
+                <li class="nav-item" id="nav-reviews"><i class="ph ph-star"></i> Reviews</li>
+            </ul>
+
+            <div class="playlists-area">
+                <div class="list-header">
+                    My Playlists
+                    <button id="create-playlist-btn">+</button>
+                </div>
+                <!-- Playlists will be injected here by main.js -->
+            </div>
+
+            <button id="theme-toggle-btn" class="nav-item" style="background:none; border:none; width:100%; justify-content:flex-start; margin-top: 10px;"><i class="ph ph-moon"></i> Theme</button>
+        </aside>
+
+
+
+        <main class="main-view">
+            
+            <header class="header-bar">
+                <div class="search-wrapper">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" id="search-input" placeholder="Search artists, songs, or albums...">
+                    <button id="voice-search-btn" title="Search by Voice"><i class="ph-fill ph-microphone"></i></button>
+                </div>
+                <div class="user-profile">
+                    <div class="notification-wrapper" style="position: relative; margin-left: 10px;">
+                        <button id="notification-btn" class="btn-icon" style="font-size: 28px;" title="Notifications"><i class="ph-fill ph-bell"></i></button>
+                        <div id="notification-dot" style="position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; background: var(--purple-glow); border-radius: 50%; display: none;"></div>
+                        <div id="notification-menu" class="more-options-menu" style="width: 320px; right: 0;">
+                            <div style="padding: 10px; color: var(--text-muted); text-align: center;">Notifications are not yet implemented.</div>
+                            <!-- Notifications will be injected here -->
+                        </div>
+                    </div>
+                    <button id="profile-btn" style="margin-left: 10px; background: none; border: none; color: white; cursor: pointer;"><i class="ph-fill ph-user-circle" style="font-size: 32px;"></i></button>
+                </div>
+            </header>
+
+            <!-- HOME VIEW -->
+            <div id="home-view">
+                <section class="hero-section">
+                    <h2 id="welcome-msg">Welcome back, Varun</h2>
+                    <p>Here's your "Cosmic Flow" mix for today.</p>
+                </section>
+
+                <h3 class="section-title">Your Daily Mix</h3>
+                <div class="card-grid" id="daily-mix-grid" style="min-height: 180px; margin-bottom: 40px;">
+                    <!-- Populated by JS -->
+                </div>
+
+                <h3 class="section-title">Trending Now</h3>
+                <div class="card-grid" id="trending-grid" style="min-height: 180px; margin-bottom: 40px;">
+                    <!-- Populated by JS -->
+                </div>
+
+                <h3 class="section-title">Recently Played</h3>
+                <div class="card-grid" id="recently-played-grid" style="min-height: 180px; margin-bottom: 40px;">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 class="section-title" style="margin-bottom: 0;">All Songs</h3>
+                    <select id="sort-songs" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-muted); padding: 6px 12px; border-radius: 8px; outline: none;">
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                        <option value="title-asc">Title (A-Z)</option>
+                        <option value="artist-asc">Artist (A-Z)</option>
+                    </select>
+                    <select id="filter-genre" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-muted); padding: 6px 12px; border-radius: 8px; outline: none; margin-left: 10px;">
+                        <option value="all">All Genres</option>
+                        <option value="Pop">Pop</option>
+                        <option value="Hip-Hop">Hip-Hop</option>
+                        <option value="Rock">Rock</option>
+                        <option value="Electronic">Electronic</option>
+                        <option value="Jazz">Jazz</option>
+                        <option value="Classical">Classical</option>
+                        <option value="Lo-Fi">Lo-Fi</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h3 class="section-title">Vibe Check (Mood)</h3>
+                    <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;">
+                        <button class="mood-btn" data-mood="Happy" style="background: #FFD700; color: black; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600;">Happy</button>
+                        <button class="mood-btn" data-mood="Sad" style="background: #4682B4; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600;">Sad</button>
+                        <button class="mood-btn" data-mood="Chill" style="background: #98FB98; color: black; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600;">Chill</button>
+                        <button class="mood-btn" data-mood="Energetic" style="background: #FF4500; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600;">Energetic</button>
+                        <button class="mood-btn" data-mood="Focus" style="background: #9370DB; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600;">Focus</button>
+                        <button class="mood-btn" data-mood="Romantic" style="background: #FF69B4; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600;">Romantic</button>
+                    </div>
+                </div>
+
+                <div class="card-grid" id="all-songs-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- SEARCH VIEW -->
+            <div id="search-view" style="display: none;">
+                <h2 class="section-title">Search Results</h2>
+                <div id="search-history-container" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 class="section-title" style="margin-bottom: 0; font-size: 16px; color: var(--text-muted);">Recent Searches</h3>
+                        <button id="clear-history-btn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px;">Clear All</button>
+                    </div>
+                    <div class="search-history-tags" id="search-history-tags"></div>
+                </div>
+                <div class="card-grid" id="search-results-grid"></div>
+            </div>
+
+            <!-- FEED VIEW -->
+            <div id="feed-view" style="display: none;">
+                <h2 class="section-title">Your Feed</h2>
+                <div class="card-grid" id="feed-grid"></div>
+            </div>
+
+            <!-- PROFILE VIEW -->
+            <div id="profile-view" style="display: none;">
+                <h2 class="section-title">My Profile</h2>
+                <div class="profile-header" style="margin-bottom: 30px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: var(--text-muted);">Username</label>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
+                            <input type="text" id="profile-username-input" style="padding: 8px; border-radius: 6px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white;" readonly>
+                            <button id="upload-song-btn" style="padding: 8px 16px; background: linear-gradient(135deg, var(--teal-glow), var(--purple-glow)); border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600;">Upload Song</button>
+                            <button id="logout-btn" style="display: none; background: rgba(255, 68, 68, 0.2); color: #ff4444; border: 1px solid rgba(255, 68, 68, 0.3); padding: 8px 16px; border-radius: 6px; cursor: pointer;">Logout</button>
+                        </div>
+
+                        <h3 style="font-size: 16px; margin-bottom: 10px; border-top: 1px solid var(--glass-border); padding-top: 15px;">Account Settings</h3>
+                        <form id="update-profile-form" style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
+                            <input type="text" name="username" id="settings-username" placeholder="New Username">
+                            <input type="email" name="email" id="settings-email" placeholder="New Email">
+                            <input type="password" name="password" id="settings-password" placeholder="New Password">
+                            <button type="submit" style="padding: 8px 16px; background: var(--purple-glow); border: none; border-radius: 6px; color: white; cursor: pointer; width: fit-content;">Update Profile</button>
+                        </form>
+
+                        <div id="role-buttons-container" style="display: none; gap: 10px; margin-top: 15px;">
+                             <button id="profile-admin-btn" style="padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); border-radius: 6px; color: white; cursor: pointer;"><i class="ph ph-shield-check"></i> Admin Dashboard</button>
+                             <button id="profile-dev-btn" style="padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); border-radius: 6px; color: white; cursor: pointer;"><i class="ph ph-code"></i> Developer Dashboard</button>
+                        </div>
+
+                        <div style="margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 15px;">
+                            <button id="delete-account-btn" style="background: transparent; border: 1px solid #ff4444; color: #ff4444; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">Delete Account</button>
+                        </div>
+                    </div>
+                </div>
+                <h3 class="section-title">My Uploads</h3>
+                <div class="card-grid" id="my-uploads-grid"></div>
+
+                <h3 class="section-title" style="margin-top: 30px;">Keyboard Shortcuts</h3>
+                <div id="shortcuts-settings-container"></div>
+            </div>
+
+            <!-- LIBRARY VIEW (With Queue) -->
+            <div id="library-view" style="display: none;">
+                <h2 class="section-title">Library</h2>
+                <div class="library-tabs" style="margin-bottom: 20px; display: flex; gap: 15px;">
+                    <button class="tab-btn active" id="tab-queue">Queue</button>
+                    <button class="tab-btn" id="tab-favorites">Favorites</button>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <h3 class="section-title">Recently Added</h3>
+                    <div class="card-grid" id="library-recently-added-grid" style="min-height: 180px;"></div>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <h3 class="section-title">Smart Playlists (Genres)</h3>
+                    <div class="card-grid" id="smart-playlists-grid" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));"></div>
+                </div>
+                
+                <!-- Shuffle Play Button -->
+                <button id="library-shuffle-btn" style="margin-bottom: 20px; background: linear-gradient(135deg, var(--purple-glow), var(--teal-glow)); border: none; padding: 10px 20px; border-radius: 20px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="ph-fill ph-shuffle"></i> Shuffle Play All Songs</button>
+
+                <div id="library-queue-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 class="section-title" style="margin-bottom: 0;">Current Queue</h3>
+                        <button id="clear-queue-btn" style="background: rgba(255, 68, 68, 0.2); color: #ff4444; border: 1px solid rgba(255, 68, 68, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">Clear Queue</button>
+                    </div>
+                    <div id="library-queue-list" class="queue-list-container"></div>
+                </div>
+
+                <div id="library-favorites-container" style="display: none;">
+                    <h3 class="section-title">Liked Songs</h3>
+                    <div class="card-grid" id="favorites-grid"></div>
+                </div>
+            </div>
+
+            <!-- HISTORY VIEW -->
+            <div id="history-view" style="display: none;">
+                <h2 class="section-title">Listening History</h2>
+                <div class="queue-list-container" id="history-list"></div>
+            </div>
+
+            <!-- REVIEWS VIEW -->
+            <div id="reviews-view" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="section-title" style="margin-bottom: 0;">User Reviews</h2>
+                    <button id="add-review-btn" style="background: var(--purple-glow); border: none; padding: 8px 16px; border-radius: 6px; color: white; cursor: pointer;">Write a Review</button>
+                </div>
+                <div class="card-grid" id="reviews-grid" style="grid-template-columns: 1fr;"></div>
+            </div>
+
+            <!-- STATS VIEW -->
+            <div id="stats-view" style="display: none;">
+                <h2 class="section-title">Your Listening Stats</h2>
+                <div class="stats-container">
+                    <div id="top-genres-stats" class="stats-section"></div>
+                    <div id="top-artists-stats" class="stats-section"></div>
+                </div>
+            </div>
+
+            <!-- ARTIST PROFILE VIEW -->
+            <div id="artist-view" style="display: none;">
+                <div class="profile-header" style="margin-bottom: 30px; background: linear-gradient(135deg, rgba(123, 97, 255, 0.2), rgba(0, 240, 255, 0.1)); padding: 30px; border-radius: 16px; text-align: center;">
+                    <h2 id="artist-profile-name" style="font-size: 32px; margin-bottom: 10px;">Artist Name</h2>
+                    <p style="color: var(--text-muted);">Artist Profile</p>
+                    <div id="artist-actions" style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;"></div>
+                </div>
+                <h3 class="section-title">Songs</h3>
+                <div class="card-grid" id="artist-songs-grid"></div>
+            </div>
+
+            <!-- ADMIN DASHBOARD -->
+            <div id="admin-view" style="display: none;">
+                <h2 class="section-title">Admin Dashboard</h2>
+                <div class="profile-header" style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
+                    <h3>Manage Roles (Owner Only)</h3>
+                    <form id="assign-role-form" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+                        <input type="text" name="username" placeholder="Username" required style="padding: 8px; border-radius: 6px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white;">
+                        <select name="newRole" style="padding: 8px; border-radius: 6px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white;">
+                            <option value="user">User</option>
+                            <option value="developer">Developer</option>
+                            <option value="admin">Admin</option>
+                            <option value="owner">Owner</option>
+                        </select>
+                        <button type="submit" style="padding: 8px 16px; background: var(--purple-glow); border: none; border-radius: 6px; color: white; cursor: pointer;">Assign</button>
+                    </form>
+                </div>
+
+                <h3 class="section-title" style="margin-top: 30px;">Blocked Users</h3>
+                <div id="blocked-users-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+
+            <!-- DEVELOPER DASHBOARD -->
+            <div id="developer-view" style="display: none;">
+                <h2 class="section-title">Developer Dashboard</h2>
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; font-family: monospace;">
+                    <p>> System Status: Online</p>
+                    <p>> API Latency: 24ms</p>
+                    <p>> Active Connections: 1</p>
+                    <p>> Database: Connected</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Removed sidebar queue to put it in library view as requested, or we can keep both. 
+             For this request, I'll hide the sidebar queue to clean up the UI since it's in Library now. -->
+        <aside class="queue-sidebar" style="display: none;">
+            <h3>Queue</h3>
+            <div id="queue-list"></div>
+        </aside>
+
+        <footer class="player-island">
+            <div class="track-meta">
+                <img id="current-song-img" src="https://upload.wikimedia.org/wikipedia/en/e/e6/The_Weeknd_-_Blinding_Lights.png" alt="Cover">
+                <div class="track-info">
+                    <h5 id="current-song-title">Blinding Lights</h5>
+                    <span id="current-song-artist">The Weeknd</span>
+                </div>
+                <button id="like-btn" class="btn-icon"><i class="ph-fill ph-heart"></i></button>
+            </div>
+
+            <div class="player-center">
+                <canvas id="visualizer" width="300" height="50"></canvas>
+                <div class="controls">
+                    <button id="shuffle-btn" class="btn-icon"><i class="ph-fill ph-shuffle"></i></button>
+                    <button id="prev-btn" class="btn-icon"><i class="ph-fill ph-skip-back"></i></button>
+                    <button id="play-btn" class="play-fab"><i class="ph-fill ph-play"></i></button>
+                    <button id="next-btn" class="btn-icon"><i class="ph-fill ph-skip-forward"></i></button>
+                    <button id="repeat-btn" class="btn-icon"><i class="ph-fill ph-repeat"></i></button>
+                    
+                    <div class="more-options-wrapper" style="position: relative;">
+                        <button id="more-options-btn" class="btn-icon" title="More Options"><i class="ph-fill ph-dots-three-vertical"></i></button>
+                        <div id="more-options-menu" class="more-options-menu">
+                            <button id="lyrics-btn" class="menu-item" data-tooltip="View song lyrics"><i class="ph-fill ph-microphone-stage"></i> Lyrics</button>
+                            <button id="karaoke-btn" class="menu-item" data-tooltip="Remove vocals from track"><i class="ph-fill ph-microphone-slash"></i> Karaoke Mode</button>
+                            <button id="eq-btn" class="menu-item" data-tooltip="Adjust bass and treble"><i class="ph-fill ph-faders"></i> Equalizer</button>
+                            <button id="pitch-btn" class="menu-item" data-tooltip="Change song pitch/speed"><i class="ph-fill ph-music-note"></i> Pitch Shift</button>
+                            <button id="slowed-reverb-btn" class="menu-item" data-tooltip="Slow down and add reverb"><i class="ph-fill ph-waves"></i> Slowed + Reverb</button>
+                            <button id="party-btn" class="menu-item" data-tooltip="Flash screen to beat"><i class="ph-fill ph-confetti"></i> Party Mode</button>
+                            <button id="pip-btn" class="menu-item" data-tooltip="Floating mini player"><i class="ph-fill ph-picture-in-picture"></i> Mini Player</button>
+                            <button id="sleep-timer-btn" class="menu-item" data-tooltip="Stop audio after time"><i class="ph-fill ph-timer"></i> Sleep Timer</button>
+                            <button id="focus-mode-btn" class="menu-item" data-tooltip="Hide everything except player"><i class="ph-fill ph-corners-out"></i> Focus Mode</button>
+                            <button id="private-session-btn" class="menu-item" data-tooltip="Stop tracking listening history"><i class="ph-fill ph-eye-slash"></i> Private Session</button>
+                            <button id="data-saver-btn" class="menu-item" data-tooltip="Lower audio quality to save data"><i class="ph-fill ph-wifi-low"></i> Data Saver</button>
+                            <div style="padding: 10px 12px;">
+                                <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 5px;">Crossfade (sec)</label>
+                                <input type="range" id="crossfade-slider" min="0" max="12" value="0" step="1" style="width: 100%;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-area">
+                    <span id="current-time">0:00</span>
+                    <input type="range" id="seek-bar" value="0" min="0" step="1">
+                    <span id="total-duration">0:00</span>
+                    <span id="sleep-timer-display" style="font-size: 11px; color: var(--purple-glow); margin-left: 10px; display: none;"></span>
+                </div>
+            </div>
+
+            <div class="volume-area">
+                <i class="ph ph-speaker-high" style="color: #9496A1; font-size: 20px;"></i>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+            </div>
+            <audio id="audio-player" crossorigin="anonymous"></audio>
+            <video id="pip-video" style="display: none;" muted></video>
+        </footer>
+
+    </div>
+
+    <!-- Modals moved outside dashboard so they work when dashboard is hidden -->
+    <div id="create-playlist-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Create Playlist</h2>
+            <form id="create-playlist-form">
+                <input type="text" name="name" placeholder="Playlist Name" required>
+                <button type="submit">Create</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="upload-song-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Upload Song</h2>
+            <form id="upload-song-form">
+                <input type="text" name="title" placeholder="Song Title" required>
+                <input type="text" name="artist" placeholder="Artist" required>
+                <select name="genre" style="width: 100%; padding: 14px 16px; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: var(--text-main); outline: none;">
+                    <option value="Pop">Pop</option>
+                    <option value="Hip-Hop">Hip-Hop</option>
+                    <option value="Rock">Rock</option>
+                    <option value="Electronic">Electronic</option>
+                    <option value="Jazz">Jazz</option>
+                    <option value="Classical">Classical</option>
+                    <option value="Lo-Fi">Lo-Fi</option>
+                    <option value="Other">Other</option>
+                </select>
+                <select name="mood" style="width: 100%; padding: 14px 16px; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: var(--text-main); outline: none;">
+                    <option value="Neutral">Neutral (Default)</option>
+                    <option value="Happy">Happy</option>
+                    <option value="Sad">Sad</option>
+                    <option value="Chill">Chill</option>
+                    <option value="Energetic">Energetic</option>
+                    <option value="Focus">Focus</option>
+                    <option value="Romantic">Romantic</option>
+                </select>
+                <input type="file" name="song" accept="audio/*" required>
+                <textarea name="lyrics" placeholder="Song Lyrics (Optional)" style="width: 100%; padding: 14px 16px; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: var(--text-main); font-family: 'Inter', sans-serif; resize: vertical; min-height: 100px;"></textarea>
+                <div id="upload-progress-container" class="progress-container">
+                    <div id="upload-progress-bar" class="progress-bar"></div>
+                </div>
+                <div id="upload-spinner" style="display: none; text-align: center; margin: 10px 0;">
+                    <div class="spinner"></div>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Processing...</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" style="flex: 1;">Upload</button>
+                    <button type="button" id="cancel-upload-btn" style="display: none; flex: 1; background: #ff4444; border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="rename-playlist-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Rename Playlist</h2>
+            <form id="rename-playlist-form">
+                <input type="hidden" id="rename-playlist-id">
+                <input type="text" id="rename-playlist-name" name="name" placeholder="New Playlist Name" required>
+                <button type="submit">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="sleep-timer-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Sleep Timer</h2>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="timer-option" data-time="15" style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border);">15 Minutes</button>
+                <button class="timer-option" data-time="30" style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border);">30 Minutes</button>
+                <button class="timer-option" data-time="60" style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border);">1 Hour</button>
+                <button class="timer-option" data-time="0" style="background: rgba(255, 68, 68, 0.2); color: #ff4444; border: 1px solid rgba(255, 68, 68, 0.3);">Stop Timer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="lyrics-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="lyrics-song-title">Lyrics</h2>
+            <div id="lyrics-content" class="lyrics-text-area">No lyrics available.</div>
+        </div>
+    </div>
+
+    <div id="eq-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Equalizer</h2>
+            <div style="display: flex; flex-direction: column; gap: 20px; padding: 10px;">
+                <div>
+                    <label style="display: block; margin-bottom: 10px; color: var(--text-muted);">Bass</label>
+                    <input type="range" id="bass-slider" min="-10" max="10" value="0" step="1" style="width: 100%;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 10px; color: var(--text-muted);">Treble</label>
+                    <input type="range" id="treble-slider" min="-10" max="10" value="0" step="1" style="width: 100%;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pitch-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Pitch Shift</h2>
+            <div style="padding: 10px;">
+                <label style="display: block; margin-bottom: 10px; color: var(--text-muted); text-align: center;">Adjust Pitch & Speed</label>
+                <input type="range" id="pitch-slider" min="0.5" max="1.5" value="1" step="0.05" style="width: 100%;">
+                <p id="pitch-value" style="text-align: center; margin-top: 10px; color: var(--text-main);">1.0x</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-to-playlist-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add to Playlist</h2>
+            <div id="playlist-selection-list" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <div id="report-song-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Report Song</h2>
+            <form id="report-song-form">
+                <input type="hidden" id="report-song-id">
+                <select id="report-reason" style="width: 100%; padding: 14px 16px; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: var(--text-main); outline: none;">
+                    <option value="Inappropriate Content">Inappropriate Content</option>
+                    <option value="Copyright Violation">Copyright Violation</option>
+                    <option value="Low Quality">Low Quality</option>
+                    <option value="Other">Other</option>
+                </select>
+                <button type="submit" style="background: linear-gradient(135deg, #ff4444, #ff0000);">Submit Report</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="report-user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Report User</h2>
+            <form id="report-user-form">
+                <input type="hidden" id="report-user-id">
+                <select id="report-user-reason" style="width: 100%; padding: 14px 16px; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: var(--text-main); outline: none;">
+                    <option value="Harassment">Harassment</option>
+                    <option value="Inappropriate Content">Inappropriate Content</option>
+                    <option value="Spam">Spam</option>
+                    <option value="Other">Other</option>
+                </select>
+                <button type="submit" style="background: linear-gradient(135deg, #ff4444, #ff0000);">Submit Report</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="review-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Write a Review</h2>
+            <form id="review-form">
+                <input type="number" name="rating" min="1" max="5" placeholder="Rating (1-5)" required>
+                <textarea name="comment" placeholder="Your feedback..." style="width: 100%; padding: 14px 16px; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: var(--text-main); font-family: 'Inter', sans-serif; resize: vertical; min-height: 100px;" required></textarea>
+                <button type="submit">Submit Review</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="whats-new-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>What's New 🚀</h2>
+            <ul style="list-style: none; padding: 0; color: var(--text-muted); line-height: 1.6;">
+                <li>✨ <strong>Genre Tags:</strong> Filter your library by vibe.</li>
+                <li>🎤 <strong>Karaoke Mode:</strong> Sing along with vocal removal.</li>
+                <li>🎹 <strong>Equalizer:</strong> Fine-tune your bass and treble.</li>
+                <li>🌙 <strong>Sleep Timer:</strong> Drift off with auto-stop.</li>
+                <li>📱 <strong>Mini Player:</strong> Keep listening while browsing.</li>
+            </ul>
+            <button id="close-whats-new-btn" style="width: 100%; margin-top: 20px;">Got it!</button>
+        </div>
+    </div>
+
+    <div id="delete-account-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 style="color: #ff4444;">Delete Account</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Are you sure? This action cannot be undone. All your songs and playlists will be lost.</p>
+            <button id="confirm-delete-account-btn" style="background: #ff4444; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Yes, Delete My Account</button>
+        </div>
+    </div>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Log In</h2>
+            <form id="login-form">
+                <input type="email" name="email" placeholder="Email" required>
+                <div style="position: relative;">
+                    <input type="password" name="password" id="login-password" placeholder="Password" required style="width: 100%;">
+                    <i class="ph-fill ph-eye toggle-password" data-target="login-password" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+                </div>
+                <button type="submit">Log In</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="signup-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Sign Up</h2>
+            <form id="signup-form">
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="email" name="email" placeholder="Email" required>
+                <div style="position: relative;">
+                    <input type="password" name="password" id="signup-password" placeholder="Password" required style="width: 100%;">
+                    <i class="ph-fill ph-eye toggle-password" data-target="signup-password" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+                </div>
+                <button type="submit">Sign Up</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
